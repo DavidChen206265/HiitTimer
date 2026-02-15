@@ -1,0 +1,1 @@
+A simple hexadecimal color code game.
