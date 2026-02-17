@@ -1,20 +1,37 @@
 {
-    "short_name": "HexColorCodeGame",
-    "name": "Hexadecimal Color Code Game",
-    "icons": [
-      {
-        "src": "images/icons/app-icon-192.png",
-        "sizes": "192x192",
-        "type": "image/png"
-      },
-      {
-        "src": "images/icons/app-icon-512.png",
-        "sizes": "512x512",
-        "type": "image/png"
-      }
-    ],
-    "start_url": "https://davidchen206265.github.io/HexadecimalColorCodeGame/index.html",
-    "display": "standalone",
-    "theme_color": "black",
-    "background_color": "white"
-  }
+  "id": "/HiitTimer/",
+  "short_name": "HiitTimer",
+  "name": "Hiit Timer",
+  "description": "A timer for high-intensity interval training.",
+  "icons": [
+    {
+      "src": "./images/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./images/icons/maskable-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "./images/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./images/icons/maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}
