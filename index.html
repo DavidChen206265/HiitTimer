@@ -1,115 +1,173 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-    />
-    <meta
-      name="description"
-      content="A high-intensity interval training timer designed for performance."
-    />
-    <meta name="theme-color" content="#000000" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
 
-    <title>HIIT Timer | Interval Training</title>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="A high-intensity interval training timer designed for performance." />
+  <meta name="theme-color" content="#000000" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
 
-    <link rel="stylesheet" href="style.css" />
-    <link rel="manifest" href="manifest.json" />
-    <link rel="icon" href="favicon.ico" sizes="any" />
-    <script src="script.js" defer></script>
-  </head>
+  <title>HIIT Timer | Interval Training</title>
 
-  <body>
-    <header>
-      <h1>HIIT Timer</h1>
-    </header>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="favicon.ico" sizes="any" />
+  <script src="script.js" defer></script>
+</head>
 
-    <main>
-      <!-- displays -->
-      <div id="status-display">Status: init</div>
-      <div id="round-display">Round 0 / 0</div>
-      <div id="time-display">0s</div>
+<body>
+  <header>
+    <h1>HIIT Timer</h1>
+  </header>
 
-      <!-- control button -->
-      <div id="start-button">START</div>
+  <main>
+    <!-- displays -->
+    <div id="status-display">Status: init</div>
+    <div id="round-display">Round 0 / 0</div>
+    <div id="time-display">0s</div>
 
-      <!-- settings -->
+    <!-- control button -->
+    <div id="start-button">START</div>
 
-      <form id="settings-form">
-        <div>
-          <label for="number-of-rounds">number-of-rounds:</label>
-          <input
-            type="number"
-            id="number-of-rounds"
-            name="number-of-rounds"
-            required
-          />
+    <!-- settings -->
+    <form id="settings-form">
+
+      <!-- number-of-rounds -->
+      <div class="display-group">
+        <label for="number-of-rounds">Number of Rounds:</label>
+        <div class="input-wrapper">
+          <input type="number" id="number-of-rounds" name="number-of-rounds" class="settings" value="30" min="0" step="1"
+            oninput="if (this.value < 0) this.value = 0;" />
+          <span class="unit">rounds</span>
         </div>
-        <div>
-          <label for="work-time">work-time:</label>
-          <input type="number" id="work-time" name="work-time" required />
-        </div>
-        <div>
-          <label for="rest-time">rest-time:</label>
-          <input type="number" id="rest-time" name="rest-time" required />
-        </div>
-        <div>
-          <label for="warmup-time">warmup-time:</label>
-          <input type="number" id="warmup-time" name="warmup-time" required />
-        </div>
-        <div>
-          <label for="cool-down-time">cool-down-time:</label>
-          <input
-            type="number"
-            id="cool-down-time"
-            name="cool-down-time"
-            required
-          />
-        </div>
-        <div>
-          <input type="submit" value="Confirm" />
-        </div>
-      </form>
-      <div id="error-messages"></div>
+      </div>
 
-      <form id="workTimerForm">
-        <div class="display-group">
-          <label>Work Time:</label>
-          <div class="input-wrapper">
-            <input
-              type="number"
-              id="work-time-input"
-              name="duration"
-              value="30"
-              min="0"
-              step="1"
-              oninput="if (this.value < 0) this.value = 0;"
-            />
-            <span class="unit">s</span>
-          </div>
+      <div class="button-group">
+        <button type="button" class="adjust-btn btn-minus btn-for-setting-0" data-change="-5">-5</button>
+        <button type="button" class="adjust-btn btn-minus btn-for-setting-0" data-change="-1">-1</button>
+        <button type="button" class="adjust-btn btn-plus btn-for-setting-0" data-change="1">+1</button>
+        <button type="button" class="adjust-btn btn-plus btn-for-setting-0" data-change="5">+5</button>
+        <button type="button" class="adjust-btn btn-reset">
+          Reset 
+        </button>
+      </div>
+
+      <!-- work-time -->
+      <div class="display-group">
+        <label for="work-time">Work Time:</label>
+        <div class="input-wrapper">
+          <input type="number" id="work-time" name="work-time" class="settings" value="30" min="0" step="1"
+            oninput="if (this.value < 0) this.value = 0;" />
+          <span class="unit">s</span>
         </div>
+      </div>
 
-        <div class="button-group">
-          <button type="button" class="adjust-btn" data-change="-10">
-            -10s
-          </button>
-          <button type="button" class="adjust-btn" data-change="-5">-5s</button>
-          <button type="button" class="adjust-btn" data-change="-1">-1s</button>
-          <button type="button" class="adjust-btn" data-change="1">+1s</button>
-          <button type="button" class="adjust-btn" data-change="5">+5s</button>
-          <button type="button" class="adjust-btn" data-change="10">
-            +10s
-          </button>
+      <div class="button-group">
+        <button type="button" class="adjust-btn btn-minus btn-for-setting-1" data-change="-10">
+          -10s
+        </button>
+        <button type="button" class="adjust-btn btn-minus btn-for-setting-1" data-change="-5">-5s</button>
+        <button type="button" class="adjust-btn btn-minus btn-for-setting-1" data-change="-1">-1s</button>
+        <button type="button" class="adjust-btn btn-plus btn-for-setting-1" data-change="1">+1s</button>
+        <button type="button" class="adjust-btn btn-plus btn-for-setting-1" data-change="5">+5s</button>
+        <button type="button" class="adjust-btn btn-plus btn-for-setting-1" data-change="10">
+          +10s
+        </button>
+        <button type="button" class="adjust-btn btn-reset">
+          Reset 
+        </button>
+      </div>
+
+      <!-- rest-time -->
+      <div class="display-group">
+        <label for="rest-time">Rest Time:</label>
+        <div class="input-wrapper">
+          <input type="number" id="rest-time" name="rest-time" class="settings" value="30" min="0" step="1"
+            oninput="if (this.value < 0) this.value = 0;" />
+          <span class="unit">s</span>
         </div>
+      </div>
 
-        <button type="submit" class="submit-btn">Save Settings</button>
-      </form>
-    </main>
+      <div class="button-group">
+        <button type="button" class="adjust-btn btn-minus btn-for-setting-2" data-change="-10">
+          -10s
+        </button>
+        <button type="button" class="adjust-btn btn-minus btn-for-setting-2" data-change="-5">-5s</button>
+        <button type="button" class="adjust-btn btn-minus btn-for-setting-2" data-change="-1">-1s</button>
+        <button type="button" class="adjust-btn btn-plus btn-for-setting-2" data-change="1">+1s</button>
+        <button type="button" class="adjust-btn btn-plus btn-for-setting-2" data-change="5">+5s</button>
+        <button type="button" class="adjust-btn btn-plus btn-for-setting-2" data-change="10">
+          +10s
+        </button>
+        <button type="button" class="adjust-btn btn-reset">
+          Reset 
+        </button>
+      </div>
 
-    <footer></footer>
-  </body>
+      <!-- warmup-time -->
+      <div class="display-group">
+        <label for="warmup-time">Warmup Time:</label>
+        <div class="input-wrapper">
+          <input type="number" id="warmup-time" name="warmup-time" class="settings" value="30" min="0" step="1"
+            oninput="if (this.value < 0) this.value = 0;" />
+          <span class="unit">s</span>
+        </div>
+      </div>
+
+      <div class="button-group">
+        <button type="button" class="adjust-btn btn-minus btn-for-setting-3" data-change="-10">
+          -10s
+        </button>
+        <button type="button" class="adjust-btn btn-minus btn-for-setting-3" data-change="-5">-5s</button>
+        <button type="button" class="adjust-btn btn-minus btn-for-setting-3" data-change="-1">-1s</button>
+        <button type="button" class="adjust-btn btn-plus btn-for-setting-3" data-change="1">+1s</button>
+        <button type="button" class="adjust-btn btn-plus btn-for-setting-3" data-change="5">+5s</button>
+        <button type="button" class="adjust-btn btn-plus btn-for-setting-3" data-change="10">
+          +10s
+        </button>
+        <button type="button" class="adjust-btn btn-reset">
+          Reset 
+        </button>
+      </div>
+
+      <!-- cool-down-time -->
+      <div class="display-group">
+        <label for="cool-down-time">Cool Down Time:</label>
+        <div class="input-wrapper">
+          <input type="number" id="cool-down-time" name="cool-down-time" class="settings" value="30" min="0" step="1"
+            oninput="if (this.value < 0) this.value = 0;" />
+          <span class="unit">s</span>
+        </div>
+      </div>
+
+      <div class="button-group">
+        <button type="button" class="adjust-btn btn-minus btn-for-setting-4" data-change="-10">
+          -10s
+        </button>
+        <button type="button" class="adjust-btn btn-minus btn-for-setting-4" data-change="-5">-5s</button>
+        <button type="button" class="adjust-btn btn-minus btn-for-setting-4" data-change="-1">-1s</button>
+        <button type="button" class="adjust-btn btn-plus btn-for-setting-4" data-change="1">+1s</button>
+        <button type="button" class="adjust-btn btn-plus btn-for-setting-4" data-change="5">+5s</button>
+        <button type="button" class="adjust-btn btn-plus btn-for-setting-4" data-change="10">
+          +10s
+        </button>
+        <button type="button" class="adjust-btn btn-reset">
+          Reset 
+        </button>
+      </div>
+
+
+      <button type="button" class="adjust-btn btn-reset">
+        Reset All
+      </button>
+      <button type="submit" class="submit-btn">Save Settings</button>
+    </form>
+  </main>
+
+  <footer></footer>
+</body>
+
 </html>

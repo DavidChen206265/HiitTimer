@@ -158,13 +158,6 @@ function handleFormData(form) {
   const warmupTimeFromSettings = data.get("warmup-time");
   const coolDownTimeFromSettings = data.get("cool-down-time");
 
-  console.log(
-    "rounds: " +
-      numberOfRoundsFromSettings +
-      " workTime: " +
-      workTimeFromSettings,
-  );
-
   numberOfRounds = numberOfRoundsFromSettings;
   workTime = workTimeFromSettings;
   restTime = restTimeFromSettings;
@@ -172,46 +165,72 @@ function handleFormData(form) {
   coolDownTime = coolDownTimeFromSettings;
 } // handleFormData
 
-const timeInput = document.getElementById("work-time-input");
-const adjustButtons = document.querySelectorAll(".adjust-btn");
 
-// 1. Functional Buttons
-adjustButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    // Get the change value (e.g., -10 or +5)
-    const change = parseInt(button.getAttribute("data-change"));
+// settings form
+const settings = document.querySelectorAll(".settings");
 
-    // Get current value, defaulting to 0 if empty
-    let currentValue = parseInt(timeInput.value) || 0;
+for (let i = 0; i < settings.length; i++) {
 
-    // Calculate new value and ensure it's not below 0
-    let newValue = Math.max(0, currentValue + change);
+  const timeInput = settings[i];
+  const adjustButtons = document.querySelectorAll(".btn-for-setting-" + i);
 
-    timeInput.value = newValue;
+  // 1. Functional Buttons
+  adjustButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+
+      // Get the change value (e.g., -10 or +5)
+      const change = parseInt(button.getAttribute("data-change"));
+
+      // Get current value, defaulting to 0 if empty
+      let currentValue = parseInt(timeInput.value) || 0;
+
+      // Calculate new value and ensure it's not below 0
+      let newValue = Math.max(0, currentValue + change);
+
+      timeInput.value = newValue;
+    });
   });
-});
 
-// 2. Prevent Invalid Keyboard Input
-timeInput.addEventListener("keydown", (e) => {
-  // Prevent symbols like '+', '-', 'e', and '.'
-  // if you only want whole positive seconds
-  const invalidChars = ["-", "+", "e", ".", ","];
-  if (invalidChars.includes(e.key)) {
-    e.preventDefault();
-  }
-});
+  // 2. Prevent Invalid Keyboard Input
+  timeInput.addEventListener("keydown", (e) => {
+    // Prevent symbols like '+', '-', 'e', and '.'
+    // if you only want whole positive seconds
+    const invalidChars = ["-", "+", "e", ".", ","];
+    if (invalidChars.includes(e.key)) {
+      e.preventDefault();
+    }
+  });
 
-// 3. Cleanup on Input (The "Safety Net")
-timeInput.addEventListener("input", () => {
-  let value = timeInput.value;
+  // 3. Cleanup on Input 
+  timeInput.addEventListener("input", () => {
+    let value = timeInput.value;
 
-  // Remove leading zeros (e.g., "05" becomes "5")
-  if (value.length > 1 && value.startsWith("0")) {
-    timeInput.value = parseInt(value);
-  }
+    // Remove leading zeros (e.g., "05" becomes "5")
+    if (value.length > 1 && value.startsWith("0")) {
+      timeInput.value = parseInt(value);
+    }
 
-  // Final check: if they somehow pasted a negative number
-  if (parseInt(value) < 0) {
-    timeInput.value = 0;
-  }
-});
+    // Final check: if they somehow pasted a negative number
+    if (parseInt(value) < 0) {
+      timeInput.value = 0;
+    }
+  });
+
+} // for
+
+// user configs
+localStorage.setItem("configs", "");
+localStorage.setItem("default-config", "");
+
+function TimerConfig (name, numberOfRounds, workTime, restTime, warmupTime, coolDownTime) {
+  this.name = name;
+  this.numberOfRounds = numberOfRounds;
+  this.workTime = workTime;
+  this.restTime = restTime;
+  this.warmupTime = warmupTime;
+  this.coolDownTime = coolDownTime;
+}
+
+const defaultConfig = new TimerConfig("Default", 3, 10, 5, 7, 12);
+localStorage.setItem("configs", defaultConfig);
+
