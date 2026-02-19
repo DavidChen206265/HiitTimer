@@ -29,51 +29,41 @@ let statusDisplay = document.getElementById("status-display");
 let roundDisplay = document.getElementById("round-display");
 let timeDisplay = document.getElementById("time-display");
 let startButton = document.getElementById("start-button");
-const settingsForm = document.getElementById('settings-form');
-const errorMessages = document.getElementById('error-messages');
+const settingsForm = document.getElementById("settings-form");
+const errorMessages = document.getElementById("error-messages");
 
 // initialize page
 window.onload = function () {
-
   // start button
   startButton.addEventListener("click", function () {
     if (timerStatus == "init") {
-
       // start the timer
       startTraining();
     } else if (timerStatus == "pause") {
-
       // recover the timer
       timerStatus = lastTimerStatus;
       startButton.innerHTML = "PAUSE";
     } else {
       lastTimerStatus = timerStatus;
-      timerStatus = "pause"
+      timerStatus = "pause";
 
       startButton.innerHTML = "RESTART";
     }
 
     updateStatusDisplay();
-
   });
 
   // settings form
-  settingsForm.addEventListener('submit', function (event) {
-
+  settingsForm.addEventListener("submit", function (event) {
     // Stop the form from submitting in the traditional way
     event.preventDefault();
 
     // Handle the form data here
     handleFormData(settingsForm);
-
   });
-
-
-
-} // window.onload
+}; // window.onload
 
 function startTraining() {
-
   // init currentTime
   timerStatus = "warmup";
   currentTime = warmupTime;
@@ -88,7 +78,6 @@ function startTraining() {
 } // startTraining
 
 function endTraining() {
-
   // end counter
   window.clearInterval(counter);
 
@@ -102,34 +91,31 @@ function endTraining() {
   timeDisplay.innerHTML = warmupTime + "s";
   updateRoundDisplay();
   updateStatusDisplay();
-
 } // endTraining
 
 function timingHelper() {
-
   // skip the count down if timer is paused
   if (timerStatus == "init" || timerStatus == "pause") return;
 
   // check for timerStatus of timer; count down if the timer is not paused
-  let timeDisplayNumber = timeDisplay.innerHTML.slice(0, timeDisplay.innerHTML.length - 1);
+  let timeDisplayNumber = timeDisplay.innerHTML.slice(
+    0,
+    timeDisplay.innerHTML.length - 1,
+  );
 
   currentTime--;
-  console.log("log: " + timerStatus + " " + currentRound + " " + currentTime)
+  console.log("log: " + timerStatus + " " + currentRound + " " + currentTime);
 
   if (currentTime <= 0) {
-
     if (timerStatus == "warmup") {
       timerStatus = "work";
       currentTime = workTime;
       currentRound++;
       updateRoundDisplay();
-
     } else if (timerStatus == "work") {
       timerStatus = "rest";
       currentTime = restTime;
-
     } else if (timerStatus == "rest") {
-
       currentRound++;
 
       // check for coolDown
@@ -141,7 +127,6 @@ function timingHelper() {
         currentTime = workTime;
         updateRoundDisplay();
       }
-
     } else if (timerStatus == "coolDown") {
       endTraining();
     }
@@ -152,11 +137,13 @@ function timingHelper() {
   // update timeDisplay
   timeDisplayNumber = currentTime;
   timeDisplay.innerHTML = timeDisplayNumber + "s";
-
 } // timingHelper
 
 function updateStatusDisplay() {
-  statusDisplay.innerHTML = "Status: " + timerStatus + (timerStatus == "pause" ? " (" + lastTimerStatus + ") " : "");
+  statusDisplay.innerHTML =
+    "Status: " +
+    timerStatus +
+    (timerStatus == "pause" ? " (" + lastTimerStatus + ") " : "");
 } // updateStatusDisplay
 
 function updateRoundDisplay() {
@@ -165,13 +152,18 @@ function updateRoundDisplay() {
 
 function handleFormData(form) {
   const data = new FormData(form);
-  const numberOfRoundsFromSettings = data.get('number-of-rounds');
-  const workTimeFromSettings = data.get('work-time');
-  const restTimeFromSettings = data.get('rest-time');
-  const warmupTimeFromSettings = data.get('warmup-time');
-  const coolDownTimeFromSettings = data.get('cool-down-time');
+  const numberOfRoundsFromSettings = data.get("number-of-rounds");
+  const workTimeFromSettings = data.get("work-time");
+  const restTimeFromSettings = data.get("rest-time");
+  const warmupTimeFromSettings = data.get("warmup-time");
+  const coolDownTimeFromSettings = data.get("cool-down-time");
 
-  console.log("rounds: " + numberOfRoundsFromSettings + " workTime: " + workTimeFromSettings);
+  console.log(
+    "rounds: " +
+      numberOfRoundsFromSettings +
+      " workTime: " +
+      workTimeFromSettings,
+  );
 
   numberOfRounds = numberOfRoundsFromSettings;
   workTime = workTimeFromSettings;
@@ -179,3 +171,47 @@ function handleFormData(form) {
   warmupTime = warmupTimeFromSettings;
   coolDownTime = coolDownTimeFromSettings;
 } // handleFormData
+
+const timeInput = document.getElementById("work-time-input");
+const adjustButtons = document.querySelectorAll(".adjust-btn");
+
+// 1. Functional Buttons
+adjustButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    // Get the change value (e.g., -10 or +5)
+    const change = parseInt(button.getAttribute("data-change"));
+
+    // Get current value, defaulting to 0 if empty
+    let currentValue = parseInt(timeInput.value) || 0;
+
+    // Calculate new value and ensure it's not below 0
+    let newValue = Math.max(0, currentValue + change);
+
+    timeInput.value = newValue;
+  });
+});
+
+// 2. Prevent Invalid Keyboard Input
+timeInput.addEventListener("keydown", (e) => {
+  // Prevent symbols like '+', '-', 'e', and '.'
+  // if you only want whole positive seconds
+  const invalidChars = ["-", "+", "e", ".", ","];
+  if (invalidChars.includes(e.key)) {
+    e.preventDefault();
+  }
+});
+
+// 3. Cleanup on Input (The "Safety Net")
+timeInput.addEventListener("input", () => {
+  let value = timeInput.value;
+
+  // Remove leading zeros (e.g., "05" becomes "5")
+  if (value.length > 1 && value.startsWith("0")) {
+    timeInput.value = parseInt(value);
+  }
+
+  // Final check: if they somehow pasted a negative number
+  if (parseInt(value) < 0) {
+    timeInput.value = 0;
+  }
+});
