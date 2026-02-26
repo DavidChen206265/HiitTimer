@@ -40,6 +40,7 @@ let statusDisplay = document.getElementById("status-display");
 let roundDisplay = document.getElementById("round-display");
 let timeDisplay = document.getElementById("time-display");
 let startButton = document.getElementById("start-button");
+let restartButton = document.getElementById("restart-button");
 
 // settings form elements
 const settingsForm = document.getElementById("settings-form");
@@ -63,6 +64,16 @@ document.getElementById("rest-time").value = defaultTime;
 document.getElementById("warmup-time").value = defaultTime;
 document.getElementById("cool-down-time").value = defaultTime;
 
+// initialize local storage
+const defaultFactoryConfig = new TimerConfig(
+  "Factory Default",
+  defaultNumberOfRounds,
+  defaultTime,
+  defaultTime,
+  defaultTime,
+  defaultTime,
+);
+
 // initialize page
 window.onload = function () {
   // start button
@@ -74,11 +85,13 @@ window.onload = function () {
       // recover the timer
       timerStatus = lastTimerStatus;
       startButton.innerHTML = "PAUSE";
+      startButton.style.backgroundColor = "#F26C52";
     } else {
       lastTimerStatus = timerStatus;
       timerStatus = "pause";
 
-      startButton.innerHTML = "RESTART";
+      startButton.innerHTML = "CONTINUE";
+      startButton.style.backgroundColor = "#4CAF50";
     }
 
     updateStatusDisplay();
@@ -92,8 +105,85 @@ window.onload = function () {
     // Handle the form data here
     handleFormData(settingsForm);
   });
+
+  // restart button
+  restartButton.addEventListener("click", function () {
+    // Only restart if the timer has actually started
+    if (timerStatus !== "init") {
+      endTraining(); // This function already resets your timer perfectly!
+    }
+  });
+
+  // config buttons
+  saveNewConfigBtn.addEventListener("click", () => {
+    const name = newConfigNameInput.value.trim();
+    if (!name) return alert("Please enter a name for the new preset.");
+
+    const configs = getConfigs();
+    if (configs.some((c) => c.name === name))
+      return alert("A preset with this name already exists.");
+
+    const newConfig = getCurrentInputsAsConfig(name);
+    configs.push(newConfig);
+    saveConfigs(configs);
+
+    newConfigNameInput.value = "";
+    updateConfigDropdown();
+    configSelect.value = configs.length - 1; // select the newly created one
+    alert(`Saved preset: ${name}`);
+  });
+
+  loadConfigBtn.addEventListener("click", () => {
+    const configs = getConfigs();
+    const selectedConfig = configs[configSelect.value];
+    if (selectedConfig) applyConfigToForm(selectedConfig);
+  });
+
+  updateConfigBtn.addEventListener("click", () => {
+    const configs = getConfigs();
+    const selectedIndex = configSelect.value;
+    if (configs[selectedIndex].name === "Factory Default")
+      return alert("Cannot overwrite Factory Default.");
+
+    const updatedConfig = getCurrentInputsAsConfig(configs[selectedIndex].name);
+    configs[selectedIndex] = updatedConfig;
+    saveConfigs(configs);
+
+    // update the default storage too
+    if (getUserDefaultConfig().name === updatedConfig.name) {
+      saveUserDefaultConfig(updatedConfig);
+    }
+
+    alert(`Updated preset: ${updatedConfig.name}`);
+  });
+
+  deleteConfigBtn.addEventListener("click", () => {
+    let configs = getConfigs();
+    const selectedIndex = configSelect.value;
+
+    if (configs[selectedIndex].name === "Factory Default")
+      return alert("Cannot delete Factory Default.");
+    if (!confirm("Are you sure you want to delete this preset?")) return;
+
+    configs.splice(selectedIndex, 1);
+    saveConfigs(configs);
+    updateConfigDropdown();
+  });
+
+  setDefaultBtn.addEventListener("click", () => {
+    const configs = getConfigs();
+    const selectedConfig = configs[configSelect.value];
+    saveUserDefaultConfig(selectedConfig);
+    updateConfigDropdown();
+    alert(`${selectedConfig.name} is now your default preset.`);
+  });
+
+  // initialize form with user default config and render dropdown
+  applyConfigToForm(getUserDefaultConfig());
+  updateConfigDropdown();
 }; // window.onload
 
+// timer functions
 function startTraining() {
   // init currentTime
   timerStatus = "warmup";
@@ -101,9 +191,12 @@ function startTraining() {
 
   // update displays
   startButton.innerHTML = "PAUSE";
+  startButton.style.backgroundColor = "#F26C52";
   timeDisplay.innerHTML = warmupTime + "s";
   updateRoundDisplay();
   updateStatusDisplay();
+  timeDisplay.style.color = "#EBE349";
+  statusDisplay.style.color = "#EBE349";
 
   counter = window.setInterval(timingHelper, 1000);
 } // startTraining
@@ -116,9 +209,12 @@ function endTraining() {
   currentTime = 0;
   currentRound = 0;
   timerStatus = "init";
+  timeDisplay.style.color = "#eee";
+  statusDisplay.style.color = "#eee";
 
   // update displays
   startButton.innerHTML = "START";
+  startButton.style.backgroundColor = "#4CAF50";
   timeDisplay.innerHTML = warmupTime + "s";
   updateRoundDisplay();
   updateStatusDisplay();
@@ -129,6 +225,7 @@ function timingHelper() {
   if (timerStatus == "init" || timerStatus == "pause") return;
 
   // check for timerStatus of timer; count down if the timer is not paused
+  // get the number from the timeDisplay (cut down the "s" at the end)
   let timeDisplayNumber = timeDisplay.innerHTML.slice(
     0,
     timeDisplay.innerHTML.length - 1,
@@ -143,9 +240,15 @@ function timingHelper() {
       currentTime = workTime;
       currentRound++;
       updateRoundDisplay();
+
+      timeDisplay.style.color = "#dd644c";
+      statusDisplay.style.color = "#dd644c";
     } else if (timerStatus == "work") {
       timerStatus = "rest";
       currentTime = restTime;
+
+      timeDisplay.style.color = "#2196F3";
+      statusDisplay.style.color = "#2196F3";
     } else if (timerStatus == "rest") {
       currentRound++;
 
@@ -153,10 +256,16 @@ function timingHelper() {
       if (currentRound > numberOfRounds) {
         timerStatus = "coolDown";
         currentTime = coolDownTime;
+
+        timeDisplay.style.color = "#4CAF50";
+        statusDisplay.style.color = "#4CAF50";
       } else {
         timerStatus = "work";
         currentTime = workTime;
         updateRoundDisplay();
+
+        timeDisplay.style.color = "#F26C52";
+        statusDisplay.style.color = "#F26C52";
       }
     } else if (timerStatus == "coolDown") {
       endTraining();
@@ -195,6 +304,8 @@ function handleFormData(form) {
   restTime = restTimeFromSettings || defaultTime;
   warmupTime = warmupTimeFromSettings || defaultTime;
   coolDownTime = coolDownTimeFromSettings || defaultTime;
+
+  endTraining();
 } // handleFormData
 
 // settings form
@@ -253,8 +364,8 @@ resetButtons.forEach((btn) => {
     const input = parentGroup.querySelector("input");
 
     if (input) {
-      // Map input IDs to defaultConfig properties
-      const idToProp = {
+      // turn id into variable name
+      const idToVarName = {
         "number-of-rounds": "numberOfRounds",
         "work-time": "workTime",
         "rest-time": "restTime",
@@ -263,13 +374,13 @@ resetButtons.forEach((btn) => {
       };
 
       const currentDefault = getUserDefaultConfig();
-      const propName = idToProp[input.id];
-      input.value = currentDefault[propName];
+      const varName = idToVarName[input.id];
+      input.value = currentDefault[varName];
     } // if
   });
 });
 
-// user configs
+// user configs object constructor
 function TimerConfig(
   name,
   numberOfRounds,
@@ -286,33 +397,23 @@ function TimerConfig(
   this.coolDownTime = coolDownTime;
 }
 
-// initialize local storage
-const defaultFactoryConfig = new TimerConfig(
-  "Factory Default",
-  defaultNumberOfRounds,
-  defaultTime,
-  defaultTime,
-  defaultTime,
-  defaultTime,
-);
-
 function getConfigs() {
   const stored = localStorage.getItem("timer-configs");
   return stored ? JSON.parse(stored) : [defaultFactoryConfig];
-}
+} // getConfigs
 
 function saveConfigs(configs) {
   localStorage.setItem("timer-configs", JSON.stringify(configs));
-}
+} // saveConfigs
 
 function getUserDefaultConfig() {
   const stored = localStorage.getItem("timer-default-config");
   return stored ? JSON.parse(stored) : defaultFactoryConfig;
-}
+} // getUserDefaultConfig
 
 function saveUserDefaultConfig(config) {
   localStorage.setItem("timer-default-config", JSON.stringify(config));
-}
+} // saveUserDefaultConfig
 
 // get current inputs
 function getCurrentInputsAsConfig(name) {
@@ -325,7 +426,7 @@ function getCurrentInputsAsConfig(name) {
     parseInt(document.getElementById("warmup-time").value) || defaultTime,
     parseInt(document.getElementById("cool-down-time").value) || defaultTime,
   );
-}
+} // getCurrentInputsAsConfig
 
 // apply a config to the form
 function applyConfigToForm(config) {
@@ -334,9 +435,9 @@ function applyConfigToForm(config) {
   document.getElementById("rest-time").value = config.restTime;
   document.getElementById("warmup-time").value = config.warmupTime;
   document.getElementById("cool-down-time").value = config.coolDownTime;
-}
+} // applyConfigToForm
 
-// Render the dropdown
+// dropdown config list
 function updateConfigDropdown() {
   const configs = getConfigs();
   const currentDefault = getUserDefaultConfig();
@@ -350,72 +451,4 @@ function updateConfigDropdown() {
     option.text = config.name + (isDefault ? " (Default)" : "");
     configSelect.appendChild(option);
   });
-}
-
-// config buttons
-saveNewConfigBtn.addEventListener("click", () => {
-  const name = newConfigNameInput.value.trim();
-  if (!name) return alert("Please enter a name for the new preset.");
-
-  const configs = getConfigs();
-  if (configs.some((c) => c.name === name))
-    return alert("A preset with this name already exists.");
-
-  const newConfig = getCurrentInputsAsConfig(name);
-  configs.push(newConfig);
-  saveConfigs(configs);
-
-  newConfigNameInput.value = "";
-  updateConfigDropdown();
-  configSelect.value = configs.length - 1; // select the newly created one
-  alert(`Saved preset: ${name}`);
-});
-
-loadConfigBtn.addEventListener("click", () => {
-  const configs = getConfigs();
-  const selectedConfig = configs[configSelect.value];
-  if (selectedConfig) applyConfigToForm(selectedConfig);
-});
-
-updateConfigBtn.addEventListener("click", () => {
-  const configs = getConfigs();
-  const selectedIndex = configSelect.value;
-  if (configs[selectedIndex].name === "Factory Default")
-    return alert("Cannot overwrite Factory Default.");
-
-  const updatedConfig = getCurrentInputsAsConfig(configs[selectedIndex].name);
-  configs[selectedIndex] = updatedConfig;
-  saveConfigs(configs);
-
-  // update the default storage too
-  if (getUserDefaultConfig().name === updatedConfig.name) {
-    saveUserDefaultConfig(updatedConfig);
-  }
-
-  alert(`Updated preset: ${updatedConfig.name}`);
-});
-
-deleteConfigBtn.addEventListener("click", () => {
-  let configs = getConfigs();
-  const selectedIndex = configSelect.value;
-
-  if (configs[selectedIndex].name === "Factory Default")
-    return alert("Cannot delete Factory Default.");
-  if (!confirm("Are you sure you want to delete this preset?")) return;
-
-  configs.splice(selectedIndex, 1);
-  saveConfigs(configs);
-  updateConfigDropdown();
-});
-
-setDefaultBtn.addEventListener("click", () => {
-  const configs = getConfigs();
-  const selectedConfig = configs[configSelect.value];
-  saveUserDefaultConfig(selectedConfig);
-  updateConfigDropdown();
-  alert(`${selectedConfig.name} is now your default preset.`);
-});
-
-// initialize form with user default config and render dropdown
-applyConfigToForm(getUserDefaultConfig());
-updateConfigDropdown();
+} // updateConfigDropdown
