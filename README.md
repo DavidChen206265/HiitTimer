@@ -1,1 +1,1 @@
-A simple hexadecimal color code game.
+A simple hiit timer PWA.
