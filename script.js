@@ -18,6 +18,7 @@ if ("serviceWorker" in navigator) {
 // handle install prompt
 let deferredPrompt;
 
+// install prompt
 window.addEventListener("beforeinstallprompt", (e) => {
   e.preventDefault();
   deferredPrompt = e;
@@ -81,13 +82,6 @@ const setDefaultBtn = document.getElementById("set-default-btn");
 const saveNewConfigBtn = document.getElementById("save-new-config-btn");
 const newConfigNameInput = document.getElementById("new-config-name");
 
-// init input values
-document.getElementById("number-of-rounds").value = defaultNumberOfRounds;
-document.getElementById("work-time").value = defaultTime;
-document.getElementById("rest-time").value = defaultTime;
-document.getElementById("warmup-time").value = defaultTime;
-document.getElementById("cool-down-time").value = defaultTime;
-
 // init auido beep
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -103,6 +97,9 @@ const defaultFactoryConfig = new TimerConfig(
 
 // initialize page
 window.onload = function () {
+  // init input values
+  loadConfig(true);
+
   // start button
   startButton.addEventListener("click", function () {
     if (timerStatus == "init") {
@@ -243,13 +240,13 @@ window.onload = function () {
     alert(`Saved preset: ${name}`);
   });
 
+  // load a config to the settings form
   loadConfigBtn.addEventListener("click", () => {
     playBeep(800, 300);
-    const configs = getConfigs();
-    const selectedConfig = configs[configSelect.value];
-    if (selectedConfig) applyConfigToForm(selectedConfig);
+    loadConfig(false);
   });
 
+  // update a config with current settings form inputs
   updateConfigBtn.addEventListener("click", () => {
     playBeep(800, 300);
     const configs = getConfigs();
@@ -266,14 +263,18 @@ window.onload = function () {
       saveUserDefaultConfig(updatedConfig);
     }
 
+    handleFormData(settingsForm); // apply changes immediately
+
     alert(`Updated preset: ${updatedConfig.name}`);
   });
 
+  // delete the current config
   deleteConfigBtn.addEventListener("click", () => {
     playBeep(200, 300);
     let configs = getConfigs();
     const selectedIndex = configSelect.value;
 
+    // prevent deletion of factory default
     if (configs[selectedIndex].name === "Factory Default")
       return alert("Cannot delete Factory Default.");
     if (!confirm("Are you sure you want to delete this preset?")) return;
@@ -504,10 +505,23 @@ function updateConfigDropdown() {
     option.value = index;
 
     const isDefault = config.name === currentDefault.name;
-    option.text = config.name + (isDefault ? " (Default)" : "");
+    option.text = (isDefault ? " (Default) " : "") + config.name;
     configSelect.appendChild(option);
   });
 } // updateConfigDropdown
+
+// load a config to the settings form
+function loadConfig(isLoadDefault) {
+  let selectedConfig;
+  const configs = getConfigs();
+  if (isLoadDefault) {
+    selectedConfig = getUserDefaultConfig();
+  } else {
+    selectedConfig = configs[configSelect.value];
+  }
+  if (selectedConfig) applyConfigToForm(selectedConfig);
+  handleFormData(settingsForm); // apply settings and reset timer
+} // loadConfig
 
 // generate a beep
 function playBeep(frequency = 600, durationInMs = 200) {
