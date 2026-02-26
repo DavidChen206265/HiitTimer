@@ -64,6 +64,9 @@ document.getElementById("rest-time").value = defaultTime;
 document.getElementById("warmup-time").value = defaultTime;
 document.getElementById("cool-down-time").value = defaultTime;
 
+// init auido beep
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
 // initialize local storage
 const defaultFactoryConfig = new TimerConfig(
   "Factory Default",
@@ -99,23 +102,106 @@ window.onload = function () {
 
   // settings form
   settingsForm.addEventListener("submit", function (event) {
-    // Stop the form from submitting in the traditional way
-    event.preventDefault();
+    playBeep(800, 300);
 
-    // Handle the form data here
+    event.preventDefault();
     handleFormData(settingsForm);
   });
 
   // restart button
   restartButton.addEventListener("click", function () {
+    playBeep(800, 300);
     // Only restart if the timer has actually started
     if (timerStatus !== "init") {
       endTraining(); // This function already resets your timer perfectly!
     }
   });
 
+  // settings form
+  for (let i = 0; i < settings.length; i++) {
+    const timeInput = settings[i];
+    const adjustButtons = document.querySelectorAll(".btn-for-setting-" + i);
+
+    adjustButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const change = parseInt(button.getAttribute("data-change"));
+        let currentValue = parseInt(timeInput.value) || 0;
+        let newValue = currentValue + change;
+
+        if (change > 0) {
+          playBeep(600, 100);
+        } else {
+          playBeep(400, 100);
+        }
+
+        // determine which limits to use based on the input id
+        let minLimit, maxLimit;
+
+        if (timeInput.id === "number-of-rounds") {
+          minLimit = minNumberOfRounds;
+          maxLimit = maxNumberOfRounds;
+        } else {
+          minLimit = minTime;
+          maxLimit = maxTime;
+        } // if
+
+        // only update the value if it stays within the boundaries
+        if (newValue >= minLimit && newValue <= maxLimit) {
+          timeInput.value = newValue;
+        } else if (newValue < minLimit) {
+          timeInput.value = minLimit;
+        } else if (newValue > maxLimit) {
+          timeInput.value = maxLimit;
+        } // if
+      });
+    });
+  } // for
+
+  // reset buttons
+  resetButtons.forEach((btn) => {
+    // reset all button
+    if (btn.id === "reset-all-btn") {
+      btn.addEventListener("click", () => {
+        document.getElementById("number-of-rounds").value =
+          defaultNumberOfRounds;
+        document.getElementById("work-time").value = defaultTime;
+        document.getElementById("rest-time").value = defaultTime;
+        document.getElementById("warmup-time").value = defaultTime;
+        document.getElementById("cool-down-time").value = defaultTime;
+        playBeep(500, 300);
+        applyConfigToForm(getUserDefaultConfig());
+      });
+
+      return;
+    } // if
+
+    btn.addEventListener("click", () => {
+      // find the closest input relative to this button
+      const parentGroup = btn.closest(".button-group").previousElementSibling;
+      const input = parentGroup.querySelector("input");
+
+      if (input) {
+        // turn id into variable name
+        const idToVarName = {
+          "number-of-rounds": "numberOfRounds",
+          "work-time": "workTime",
+          "rest-time": "restTime",
+          "warmup-time": "warmupTime",
+          "cool-down-time": "coolDownTime",
+        };
+
+        const currentDefault = getUserDefaultConfig();
+        const varName = idToVarName[input.id];
+        input.value = currentDefault[varName];
+      } // if
+
+      playBeep(500, 300);
+    });
+  });
+
   // config buttons
   saveNewConfigBtn.addEventListener("click", () => {
+    playBeep(800, 300);
     const name = newConfigNameInput.value.trim();
     if (!name) return alert("Please enter a name for the new preset.");
 
@@ -134,12 +220,14 @@ window.onload = function () {
   });
 
   loadConfigBtn.addEventListener("click", () => {
+    playBeep(800, 300);
     const configs = getConfigs();
     const selectedConfig = configs[configSelect.value];
     if (selectedConfig) applyConfigToForm(selectedConfig);
   });
 
   updateConfigBtn.addEventListener("click", () => {
+    playBeep(800, 300);
     const configs = getConfigs();
     const selectedIndex = configSelect.value;
     if (configs[selectedIndex].name === "Factory Default")
@@ -158,6 +246,7 @@ window.onload = function () {
   });
 
   deleteConfigBtn.addEventListener("click", () => {
+    playBeep(200, 300);
     let configs = getConfigs();
     const selectedIndex = configSelect.value;
 
@@ -171,6 +260,7 @@ window.onload = function () {
   });
 
   setDefaultBtn.addEventListener("click", () => {
+    playBeep(800, 300);
     const configs = getConfigs();
     const selectedConfig = configs[configSelect.value];
     saveUserDefaultConfig(selectedConfig);
@@ -220,6 +310,9 @@ function endTraining() {
   updateStatusDisplay();
 } // endTraining
 
+// this function is called every second when the timer is active
+// check the timerStatus and counts down the time accordingly, and updates the display
+// handle the transitions between warmup, work, rest, and cooldown
 function timingHelper() {
   // skip the count down if timer is paused
   if (timerStatus == "init" || timerStatus == "pause") return;
@@ -234,7 +327,12 @@ function timingHelper() {
   currentTime--;
   console.log("log: " + timerStatus + " " + currentRound + " " + currentTime);
 
+  // check for status change
   if (currentTime <= 0) {
+    // play a higher beep for status changes
+    playBeep(800, 400);
+
+    // change status and time according to the current status
     if (timerStatus == "warmup") {
       timerStatus = "work";
       currentTime = workTime;
@@ -272,6 +370,12 @@ function timingHelper() {
     }
 
     updateStatusDisplay();
+  } else if (currentTime <= 3) {
+    // play lower beep for last 3 seconds
+    playBeep(400, 200);
+  } else {
+    // play a soft beep for every second
+    playBeep(600, 100);
   } // if
 
   // update timeDisplay
@@ -307,78 +411,6 @@ function handleFormData(form) {
 
   endTraining();
 } // handleFormData
-
-// settings form
-for (let i = 0; i < settings.length; i++) {
-  const timeInput = settings[i];
-  const adjustButtons = document.querySelectorAll(".btn-for-setting-" + i);
-
-  adjustButtons.forEach((button) => {
-    button.addEventListener("click", () => {
-      const change = parseInt(button.getAttribute("data-change"));
-      let currentValue = parseInt(timeInput.value) || 0;
-      let newValue = currentValue + change;
-
-      // determine which limits to use based on the input id
-      let minLimit, maxLimit;
-
-      if (timeInput.id === "number-of-rounds") {
-        minLimit = minNumberOfRounds;
-        maxLimit = maxNumberOfRounds;
-      } else {
-        minLimit = minTime;
-        maxLimit = maxTime;
-      } // if
-
-      // only update the value if it stays within the boundaries
-      if (newValue >= minLimit && newValue <= maxLimit) {
-        timeInput.value = newValue;
-      } else if (newValue < minLimit) {
-        timeInput.value = minLimit;
-      } else if (newValue > maxLimit) {
-        timeInput.value = maxLimit;
-      } // if
-    });
-  });
-} // for
-
-// reset buttons
-resetButtons.forEach((btn) => {
-  // reset all button
-  if (btn.id === "reset-all-btn") {
-    btn.addEventListener("click", () => {
-      document.getElementById("number-of-rounds").value = defaultNumberOfRounds;
-      document.getElementById("work-time").value = defaultTime;
-      document.getElementById("rest-time").value = defaultTime;
-      document.getElementById("warmup-time").value = defaultTime;
-      document.getElementById("cool-down-time").value = defaultTime;
-
-      applyConfigToForm(getUserDefaultConfig());
-    });
-    return;
-  } // if
-
-  btn.addEventListener("click", () => {
-    // find the closest input relative to this button
-    const parentGroup = btn.closest(".button-group").previousElementSibling;
-    const input = parentGroup.querySelector("input");
-
-    if (input) {
-      // turn id into variable name
-      const idToVarName = {
-        "number-of-rounds": "numberOfRounds",
-        "work-time": "workTime",
-        "rest-time": "restTime",
-        "warmup-time": "warmupTime",
-        "cool-down-time": "coolDownTime",
-      };
-
-      const currentDefault = getUserDefaultConfig();
-      const varName = idToVarName[input.id];
-      input.value = currentDefault[varName];
-    } // if
-  });
-});
 
 // user configs object constructor
 function TimerConfig(
@@ -452,3 +484,34 @@ function updateConfigDropdown() {
     configSelect.appendChild(option);
   });
 } // updateConfigDropdown
+
+// the function to generate a beep
+function playBeep(frequency = 600, durationInMs = 200) {
+  // Browsers suspend audio until the user clicks something, so we wake it up
+  if (audioCtx.state === "suspended") {
+    audioCtx.resume();
+  }
+
+  // Create an oscillator (generates the sound wave)
+  const oscillator = audioCtx.createOscillator();
+  const gainNode = audioCtx.createGain(); // Controls the volume
+
+  oscillator.type = "sine"; // 'sine' is a smooth beep. Try 'square' for a harsher, retro alarm sound.
+  oscillator.frequency.value = frequency; // The pitch of the beep
+
+  // Connect the pieces: Oscillator -> Volume -> Speakers
+  oscillator.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+
+  // Start the sound
+  oscillator.start();
+
+  // Quickly fade out the volume so it doesn't "click" aggressively at the end
+  gainNode.gain.exponentialRampToValueAtTime(
+    0.00001,
+    audioCtx.currentTime + durationInMs / 1000,
+  );
+
+  // Stop the sound
+  oscillator.stop(audioCtx.currentTime + durationInMs / 1000);
+} // playBeep
