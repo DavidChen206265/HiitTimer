@@ -15,6 +15,30 @@ if ("serviceWorker" in navigator) {
   });
 } // if
 
+// handle install prompt
+let deferredPrompt;
+
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+
+  const installButton = document.getElementById("installButton");
+  installButton.style.display = "block";
+
+  installButton.addEventListener("click", () => {
+    installButton.style.display = "none";
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then((choiceResult) => {
+      if (choiceResult.outcome === "accepted") {
+        console.log("User accepted the install prompt");
+      } else {
+        console.log("User dismissed the install prompt");
+      }
+      deferredPrompt = null;
+    });
+  });
+});
+
 // settings limits and defaults
 let maxNumberOfRounds = 100;
 let minNumberOfRounds = 1;
@@ -485,19 +509,19 @@ function updateConfigDropdown() {
   });
 } // updateConfigDropdown
 
-// the function to generate a beep
+// generate a beep
 function playBeep(frequency = 600, durationInMs = 200) {
-  // Browsers suspend audio until the user clicks something, so we wake it up
+  // wake audio up
   if (audioCtx.state === "suspended") {
     audioCtx.resume();
   }
 
-  // Create an oscillator (generates the sound wave)
+  // create an oscillator (generates the sound wave)
   const oscillator = audioCtx.createOscillator();
   const gainNode = audioCtx.createGain(); // Controls the volume
 
-  oscillator.type = "sine"; // 'sine' is a smooth beep. Try 'square' for a harsher, retro alarm sound.
-  oscillator.frequency.value = frequency; // The pitch of the beep
+  oscillator.type = "sine"; // smooth beep
+  oscillator.frequency.value = frequency; // pitch of the beep
 
   // Connect the pieces: Oscillator -> Volume -> Speakers
   oscillator.connect(gainNode);
@@ -506,7 +530,7 @@ function playBeep(frequency = 600, durationInMs = 200) {
   // Start the sound
   oscillator.start();
 
-  // Quickly fade out the volume so it doesn't "click" aggressively at the end
+  // Quickly fade out the volume
   gainNode.gain.exponentialRampToValueAtTime(
     0.00001,
     audioCtx.currentTime + durationInMs / 1000,
