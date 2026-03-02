@@ -29,7 +29,8 @@
       "purpose": "maskable"
     }
   ],
-  "start_url": "./index.html",
+  "start_url": "https://davidchen206265.github.io/HiitTimer/",
+  "scope":"https://davidchen206265.github.io/HiitTimer",
   "display": "standalone",
   "orientation": "portrait",
   "theme_color": "#000000",
