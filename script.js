@@ -115,7 +115,7 @@ window.onload = function () {
       timerStatus = "pause";
 
       startButton.innerHTML = "CONTINUE";
-      startButton.style.backgroundColor = "#4CAF50";
+      startButton.style.backgroundColor = "#38823b";
     }
 
     updateStatusDisplay();
@@ -329,7 +329,7 @@ function endTraining() {
 
   // update displays
   startButton.innerHTML = "START";
-  startButton.style.backgroundColor = "#4CAF50";
+  startButton.style.backgroundColor = "#38823b";
   timeDisplay.innerHTML = warmupTime + "s";
   updateRoundDisplay();
   updateStatusDisplay();
@@ -380,8 +380,8 @@ function timingHelper() {
         timerStatus = "coolDown";
         currentTime = coolDownTime;
 
-        timeDisplay.style.color = "#4CAF50";
-        statusDisplay.style.color = "#4CAF50";
+        timeDisplay.style.color = "#38823b";
+        statusDisplay.style.color = "#38823b";
       } else {
         timerStatus = "work";
         currentTime = workTime;
