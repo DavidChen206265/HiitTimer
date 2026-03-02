@@ -82,7 +82,7 @@ const setDefaultBtn = document.getElementById("set-default-btn");
 const saveNewConfigBtn = document.getElementById("save-new-config-btn");
 const newConfigNameInput = document.getElementById("new-config-name");
 
-// init auido beep
+// init audio beep
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 // initialize local storage
@@ -103,14 +103,19 @@ window.onload = function () {
   // start button
   startButton.addEventListener("click", function () {
     if (timerStatus == "init") {
+
       // start the timer
       startTraining();
+
     } else if (timerStatus == "pause") {
+
       // recover the timer
       timerStatus = lastTimerStatus;
       startButton.innerHTML = "PAUSE";
       startButton.style.backgroundColor = "#F26C52";
+
     } else {
+
       lastTimerStatus = timerStatus;
       timerStatus = "pause";
 
@@ -132,9 +137,10 @@ window.onload = function () {
   // restart button
   restartButton.addEventListener("click", function () {
     playBeep(800, 300);
-    // Only restart if the timer has actually started
+
+    // only restart if the timer has actually started
     if (timerStatus !== "init") {
-      endTraining(); // This function already resets your timer perfectly!
+      endTraining(); 
     }
   });
 
@@ -143,12 +149,14 @@ window.onload = function () {
     const timeInput = settings[i];
     const adjustButtons = document.querySelectorAll(".btn-for-setting-" + i);
 
+    // functions of adjust buttons ("+", "-")
     adjustButtons.forEach((button) => {
       button.addEventListener("click", () => {
         const change = parseInt(button.getAttribute("data-change"));
         let currentValue = parseInt(timeInput.value) || 0;
         let newValue = currentValue + change;
 
+        // assign different sound effects for "+" and "-" buttons
         if (change > 0) {
           playBeep(600, 100);
         } else {
@@ -197,11 +205,13 @@ window.onload = function () {
     } // if
 
     btn.addEventListener("click", () => {
+
       // find the closest input relative to this button
       const parentGroup = btn.closest(".button-group").previousElementSibling;
       const input = parentGroup.querySelector("input");
 
       if (input) {
+        
         // turn id into variable name
         const idToVarName = {
           "number-of-rounds": "numberOfRounds",
@@ -339,6 +349,7 @@ function endTraining() {
 // check the timerStatus and counts down the time accordingly, and updates the display
 // handle the transitions between warmup, work, rest, and cooldown
 function timingHelper() {
+
   // skip the count down if timer is paused
   if (timerStatus == "init" || timerStatus == "pause") return;
 
@@ -477,7 +488,7 @@ function getCurrentInputsAsConfig(name) {
   return new TimerConfig(
     name,
     parseInt(document.getElementById("number-of-rounds").value) ||
-      defaultNumberOfRounds,
+    defaultNumberOfRounds,
     parseInt(document.getElementById("work-time").value) || defaultTime,
     parseInt(document.getElementById("rest-time").value) || defaultTime,
     parseInt(document.getElementById("warmup-time").value) || defaultTime,
@@ -504,6 +515,7 @@ function updateConfigDropdown() {
     const option = document.createElement("option");
     option.value = index;
 
+    // add the "(Default)" label to the default config
     const isDefault = config.name === currentDefault.name;
     option.text = (isDefault ? " (Default) " : "") + config.name;
     configSelect.appendChild(option);
@@ -514,13 +526,21 @@ function updateConfigDropdown() {
 function loadConfig(isLoadDefault) {
   let selectedConfig;
   const configs = getConfigs();
+
   if (isLoadDefault) {
+
+    // load the default config
     selectedConfig = getUserDefaultConfig();
   } else {
+
+    // load the current config
     selectedConfig = configs[configSelect.value];
   }
   if (selectedConfig) applyConfigToForm(selectedConfig);
-  handleFormData(settingsForm); // apply settings and reset timer
+
+  // apply settings and reset timer
+  handleFormData(settingsForm);
+
 } // loadConfig
 
 // generate a beep
