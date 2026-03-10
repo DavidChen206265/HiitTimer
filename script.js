@@ -95,10 +95,41 @@ const defaultFactoryConfig = new TimerConfig(
   defaultTime,
 );
 
+// The wake lock sentinel.
+let wakeLock = null;
+
+// Function that attempts to request a screen wake lock.
+const requestWakeLock = async () => {
+  try {
+    wakeLock = await navigator.wakeLock.request();
+    wakeLock.addEventListener('release', () => {
+      console.log('Screen Wake Lock released:', wakeLock.released);
+    });
+    console.log('Screen Wake Lock released:', wakeLock.released);
+  } catch (err) {
+    console.error(`${err.name}, ${err.message}`);
+  }
+};
+
+const handleVisibilityChange = async () => {
+  if (wakeLock !== null && document.visibilityState === 'visible') {
+    if (timerStatus !== "init" && timerStatus !== "pause") {
+      await requestWakeLock();
+    } else {
+      wakeLock.release();
+      wakeLock = null;
+    }
+  }
+};
+
+
 // initialize page
 window.onload = function () {
   // init input values
   loadConfig(true);
+
+  // listen for visibility change to re-request wake lock if needed
+  document.addEventListener('visibilitychange', handleVisibilityChange);
 
   // start button
   startButton.addEventListener("click", function () {
@@ -114,14 +145,24 @@ window.onload = function () {
       startButton.innerHTML = "PAUSE";
       startButton.style.backgroundColor = "#F26C52";
 
+      // request wake lock again when resuming
+      requestWakeLock();
+
     } else {
 
+      // pause the timer
       lastTimerStatus = timerStatus;
       timerStatus = "pause";
 
       startButton.innerHTML = "CONTINUE";
       startButton.style.backgroundColor = "#38823b";
-    }
+
+      // release wake lock 
+      if (wakeLock) {
+        wakeLock.release();
+        wakeLock = null;
+      } // inner if
+    } // outer if
 
     updateStatusDisplay();
   });
@@ -140,7 +181,7 @@ window.onload = function () {
 
     // only restart if the timer has actually started
     if (timerStatus !== "init") {
-      endTraining(); 
+      endTraining();
     }
   });
 
@@ -211,7 +252,7 @@ window.onload = function () {
       const input = parentGroup.querySelector("input");
 
       if (input) {
-        
+
         // turn id into variable name
         const idToVarName = {
           "number-of-rounds": "numberOfRounds",
@@ -309,7 +350,7 @@ window.onload = function () {
 }; // window.onload
 
 // timer functions
-function startTraining() {
+async function startTraining() {
   // init currentTime
   timerStatus = "warmup";
   currentTime = warmupTime;
@@ -324,6 +365,9 @@ function startTraining() {
   statusDisplay.style.color = "#EBE349";
 
   counter = window.setInterval(timingHelper, 1000);
+
+  // request wake lock to prevent screen from sleeping during training
+  await requestWakeLock();
 } // startTraining
 
 function endTraining() {
@@ -343,6 +387,12 @@ function endTraining() {
   timeDisplay.innerHTML = warmupTime + "s";
   updateRoundDisplay();
   updateStatusDisplay();
+
+  // release wake lock 
+  if (wakeLock) {
+    wakeLock.release();
+    wakeLock = null;
+  }
 } // endTraining
 
 // this function is called every second when the timer is active
@@ -378,40 +428,42 @@ function timingHelper() {
       timeDisplay.style.color = "#dd644c";
       statusDisplay.style.color = "#dd644c";
     } else if (timerStatus == "work") {
-      timerStatus = "rest";
-      currentTime = restTime;
-
-      timeDisplay.style.color = "#2196F3";
-      statusDisplay.style.color = "#2196F3";
-    } else if (timerStatus == "rest") {
-      currentRound++;
 
       // check for coolDown
-      if (currentRound > numberOfRounds) {
+      // go to coolDown after the last work round
+      if (currentRound >= numberOfRounds) {
         timerStatus = "coolDown";
         currentTime = coolDownTime;
 
         timeDisplay.style.color = "#38823b";
         statusDisplay.style.color = "#38823b";
       } else {
-        timerStatus = "work";
-        currentTime = workTime;
-        updateRoundDisplay();
+        timerStatus = "rest";
+        currentTime = restTime;
 
-        timeDisplay.style.color = "#F26C52";
-        statusDisplay.style.color = "#F26C52";
-      }
+        timeDisplay.style.color = "#2196F3";
+        statusDisplay.style.color = "#2196F3";
+
+      } // else
+
+    } else if (timerStatus == "rest") {
+      currentRound++;
+
+      timerStatus = "work";
+      currentTime = workTime;
+      updateRoundDisplay();
+
+      timeDisplay.style.color = "#F26C52";
+      statusDisplay.style.color = "#F26C52";
+
     } else if (timerStatus == "coolDown") {
       endTraining();
     }
 
     updateStatusDisplay();
-  } else if (currentTime <= 3) {
-    // play lower beep for last 3 seconds
+  } else if (currentTime <= 5) {
+    // play lower beep for the last 5 seconds
     playBeep(400, 200);
-  } else {
-    // play a soft beep for every second
-    playBeep(600, 100);
   } // if
 
   // update timeDisplay
