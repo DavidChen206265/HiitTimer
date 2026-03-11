@@ -44,7 +44,7 @@ window.addEventListener("beforeinstallprompt", (e) => {
 let maxNumberOfRounds = 100;
 let minNumberOfRounds = 1;
 let defaultNumberOfRounds = 5;
-let maxTime = 180;
+let maxTime = 600;
 let minTime = 3;
 let defaultTime = 15;
 
