@@ -358,7 +358,7 @@ async function startTraining() {
   // update displays
   startButton.innerHTML = "PAUSE";
   startButton.style.backgroundColor = "#F26C52";
-  timeDisplay.innerHTML = warmupTime + "s";
+  timeDisplay.innerHTML = warmupTime;
   updateRoundDisplay();
   updateStatusDisplay();
   timeDisplay.style.color = "#EBE349";
@@ -384,7 +384,7 @@ function endTraining() {
   // update displays
   startButton.innerHTML = "START";
   startButton.style.backgroundColor = "#38823b";
-  timeDisplay.innerHTML = warmupTime + "s";
+  timeDisplay.innerHTML = warmupTime;
   updateRoundDisplay();
   updateStatusDisplay();
 
@@ -404,12 +404,7 @@ function timingHelper() {
   if (timerStatus == "init" || timerStatus == "pause") return;
 
   // check for timerStatus of timer; count down if the timer is not paused
-  // get the number from the timeDisplay (cut down the "s" at the end)
-  let timeDisplayNumber = timeDisplay.innerHTML.slice(
-    0,
-    timeDisplay.innerHTML.length - 1,
-  );
-
+  // get the number from the timeDisplay 
   currentTime--;
   console.log("log: " + timerStatus + " " + currentRound + " " + currentTime);
 
@@ -468,7 +463,7 @@ function timingHelper() {
 
   // update timeDisplay
   timeDisplayNumber = currentTime;
-  timeDisplay.innerHTML = timeDisplayNumber + "s";
+  timeDisplay.innerHTML = timeDisplayNumber;
 } // timingHelper
 
 function updateStatusDisplay() {
